@@ -59,8 +59,8 @@ const Home = (props: HomeProps) => {
         </div>
 
         {!wallet.connected &&
-          <span className="text-gray-800 font-bold text-2xl cursor-default">
-            <ConnectButton>Connect Wallet</ConnectButton>
+          <span className="text-white font-bold text-2xl cursor-default">
+            <ConnectButton style={{ fontSize: 18 }}>Connect Wallet</ConnectButton>
           </span>
         }
 

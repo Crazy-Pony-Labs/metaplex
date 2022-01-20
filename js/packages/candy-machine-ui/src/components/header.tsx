@@ -1,4 +1,4 @@
-import { WalletDisconnectButton, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { WalletDisconnectButton, WalletDialogButton } from '@solana/wallet-adapter-material-ui';
 import { useWallet } from "@solana/wallet-adapter-react";
 import React from 'react';
 
@@ -19,7 +19,7 @@ const Header = () => {
       </div>
       {wallet.connected &&
         <div className="flex flex-col sm:flex-row items-center justify-end sm:h-16 space-y-2 sm:space-y-0 sm:space-x-4 p-2 sm:p-0">
-          <WalletMultiButton />
+          <WalletDialogButton />
           <WalletDisconnectButton />
         </div>
       }

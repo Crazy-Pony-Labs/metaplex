@@ -5,13 +5,6 @@ import Home from './Home';
 
 import { clusterApiUrl } from '@solana/web3.js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import {
-  getPhantomWallet,
-  getSlopeWallet,
-  getSolflareWallet,
-  getSolletWallet,
-  getSolletExtensionWallet,
-} from '@solana/wallet-adapter-wallets';
 
 import {
   ConnectionProvider,
@@ -21,10 +14,27 @@ import { WalletDialogProvider } from '@solana/wallet-adapter-material-ui';
 
 import { ThemeProvider, createTheme } from '@material-ui/core';
 
+let WALLETS: any = {
+  getPhantomWallet: () => ({ name: 'Phantom' }),
+  getSolflareWallet: () => ({ name: 'Solflare' }),
+  getSolletWallet: () => ({ name: 'Sollet' }),
+  getLedgerWallet: () => ({ name: 'Ledger' }),
+  getSlopeWallet: () => ({ name: 'Slope' }),
+  getSolletExtensionWallet: () => ({ name: 'SolletExtension' })
+};
+if (typeof window !== "undefined") {
+  WALLETS = require("@solana/wallet-adapter-wallets");
+}
+
+
 const theme = createTheme({
-  palette: {
-    type: 'light',
-  },
+  overrides: {
+    MuiButton: {
+      label: {
+        color: 'white'
+      },
+    },
+  }
 });
 
 const getCandyMachineId = (): anchor.web3.PublicKey | undefined => {
@@ -55,11 +65,11 @@ const App = () => {
 
   const wallets = useMemo(
     () => [
-      getPhantomWallet(),
-      getSolflareWallet(),
-      getSlopeWallet(),
-      getSolletWallet({ network }),
-      getSolletExtensionWallet({ network }),
+      WALLETS.getPhantomWallet(),
+      WALLETS.getSolflareWallet(),
+      WALLETS.getSlopeWallet(),
+      WALLETS.getSolletWallet({ network }),
+      WALLETS.getSolletExtensionWallet({ network }),
     ],
     [],
   );
