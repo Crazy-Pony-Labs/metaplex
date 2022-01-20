@@ -73,8 +73,6 @@ const Home = (props: HomeProps) => {
           </>
         }
 
-        {console.log("IS ACTIVE", candyMachine?.state?.isActive)}
-
         <div className="flex flex-col justify-center items-center space-y-4">
           {wallet.connected &&
             <>
