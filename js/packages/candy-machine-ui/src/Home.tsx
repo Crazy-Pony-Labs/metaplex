@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import * as anchor from '@project-serum/anchor';
 
 import styled from 'styled-components';
@@ -10,7 +9,8 @@ import { WalletDialogButton } from '@solana/wallet-adapter-material-ui';
 import { CANDY_MACHINE_PROGRAM } from './candy-machine';
 import useCandyMachine from './use-candy-machine';
 import { GatewayProvider } from '@civic/solana-gateway-react';
-import Countdown from 'react-countdown';
+import { MintCountdown } from './MintCountdown';
+import { toDate } from './utils';
 
 import Header from './components/header';
 import Spawning from './components/spawning';
@@ -35,8 +35,7 @@ export interface HomeProps {
 }
 
 const Home = (props: HomeProps) => {
-  const { isUserMinting, isSoldOut, mintStartDate, alertState, setAlertState, candyMachine, onMint, onMintMultiple } = useCandyMachine(props);
-  const [isActive, setIsActive] = useState(false);
+  const { isUserMinting, isSoldOut, alertState, setAlertState, candyMachine, onMint, onMintMultiple } = useCandyMachine(props);
   const wallet = useWallet();
   const rpcUrl = props.rpcHost;
 
@@ -78,38 +77,97 @@ const Home = (props: HomeProps) => {
           {wallet.connected &&
             <>
               {isSoldOut && <p className="text-center text-5xl font-bold text-red-600">SOLD OUT</p>}
-              {!isActive &&
-                <Countdown
-                  date={mintStartDate}
-                  onMount={({ completed }) => { console.log("Mint start", mintStartDate, completed); return completed && setIsActive(completed); }}
-                  onComplete={() => setIsActive(true)}
-                  renderer={renderCounter}
+              {!candyMachine?.state?.isActive &&
+                <>
+                <MintCountdown
+                  date={toDate(
+                    candyMachine?.state.goLiveDate
+                      ? candyMachine?.state.goLiveDate
+                      : candyMachine?.state.isPresale
+                      ? new anchor.BN(new Date().getTime() / 1000)
+                      : undefined,
+                  )}
+                  style={{ justifyContent: 'flex-end' }}
+                  status={
+                    !candyMachine?.state?.isActive || candyMachine?.state?.isSoldOut
+                      ? 'COMPLETED'
+                      : candyMachine?.state.isPresale
+                      ? 'PRESALE'
+                      : 'LIVE'
+                  }
                 />
+                </>
               }
 
               {!isSoldOut && 
                 candyMachine?.state.isActive && 
                 candyMachine?.state.gatekeeper &&
                 wallet.publicKey &&
-                wallet.signTransaction ? (
-                  <GatewayProvider
-                    wallet={{
-                      publicKey:
-                        wallet.publicKey ||
-                        new PublicKey(CANDY_MACHINE_PROGRAM),
-                      //@ts-ignore
-                      signTransaction: wallet.signTransaction,
-                    }}
-                    gatekeeperNetwork={
-                      candyMachine?.state?.gatekeeper?.gatekeeperNetwork
-                    }
-                    clusterUrl={rpcUrl}
-                    options={{ autoShowModal: false }}
-                  >
+                <>
+                  {wallet.signTransaction ? (
+                    <GatewayProvider
+                      wallet={{
+                        publicKey:
+                          wallet.publicKey ||
+                          new PublicKey(CANDY_MACHINE_PROGRAM),
+                        //@ts-ignore
+                        signTransaction: wallet.signTransaction,
+                      }}
+                      gatekeeperNetwork={
+                        candyMachine?.state?.gatekeeper?.gatekeeperNetwork
+                      }
+                      clusterUrl={rpcUrl}
+                      options={{ autoShowModal: false }}
+                    >
+                      <div className="flex flex-col justify-center items-center space-y-4">
+                        <button
+                          className="mint mint1"
+                          disabled={isSoldOut || isUserMinting}
+                          onClick={onMint}
+                        >
+                          <span>{isUserMinting ? 'LOADING...' : 'MINT 1'}</span>
+                        </button>
+
+                        <button
+                          className="mint mint5"
+                          disabled={isSoldOut || isUserMinting}
+                          onClick={() => onMintMultiple(5)}
+                        >
+                          <span>{isUserMinting ? 'LOADING...' : 'MINT 5'}</span>
+                        </button>
+
+                        <button
+                          className="mint mint10"
+                          disabled={isSoldOut || isUserMinting}
+                          onClick={() => onMintMultiple(10)}
+                        >
+                          <span>{isUserMinting ? 'LOADING...' : 'MINT 10'}</span>
+                        </button>
+
+                        <div className="h-2"></div>
+
+                        <button
+                          className="mint mint-lucky"
+                          disabled={isSoldOut || isUserMinting}
+                          onClick={ () => {
+                            const lucky = Math.min(10 + Math.floor(Math.random() * 41), (candyMachine?.state.itemsRemaining ?? 0));
+                            console.log("Lucky number is", lucky);
+                            onMintMultiple(lucky)}
+                          }
+                        >
+                          <span>{isUserMinting ? 'LOADING...' : 'I’M FEELING LUCKY'}</span>
+                        </button>
+
+                        <p className="text-center text-xs">
+                          Desperate to collect a Legend?<br/>Try your luck — this button will mint a random amount between 10 and 50 NFTs
+                        </p>
+                      </div>
+                    </GatewayProvider>
+                  ) : (
                     <div className="flex flex-col justify-center items-center space-y-4">
                       <button
                         className="mint mint1"
-                        disabled={isSoldOut || isUserMinting || !isActive}
+                        disabled={isSoldOut || isUserMinting}
                         onClick={onMint}
                       >
                         <span>{isUserMinting ? 'LOADING...' : 'MINT 1'}</span>
@@ -117,7 +175,7 @@ const Home = (props: HomeProps) => {
 
                       <button
                         className="mint mint5"
-                        disabled={isSoldOut || isUserMinting || !isActive}
+                        disabled={isSoldOut || isUserMinting}
                         onClick={() => onMintMultiple(5)}
                       >
                         <span>{isUserMinting ? 'LOADING...' : 'MINT 5'}</span>
@@ -125,7 +183,7 @@ const Home = (props: HomeProps) => {
 
                       <button
                         className="mint mint10"
-                        disabled={isSoldOut || isUserMinting || !isActive}
+                        disabled={isSoldOut || isUserMinting}
                         onClick={() => onMintMultiple(10)}
                       >
                         <span>{isUserMinting ? 'LOADING...' : 'MINT 10'}</span>
@@ -135,7 +193,7 @@ const Home = (props: HomeProps) => {
 
                       <button
                         className="mint mint-lucky"
-                        disabled={isSoldOut || isUserMinting || !isActive}
+                        disabled={isSoldOut || isUserMinting}
                         onClick={ () => {
                           const lucky = Math.min(10 + Math.floor(Math.random() * 41), (candyMachine?.state.itemsRemaining ?? 0));
                           console.log("Lucky number is", lucky);
@@ -149,52 +207,9 @@ const Home = (props: HomeProps) => {
                         Desperate to collect a Legend?<br/>Try your luck — this button will mint a random amount between 10 and 50 NFTs
                       </p>
                     </div>
-                  </GatewayProvider>
-                ) : (
-                  <div className="flex flex-col justify-center items-center space-y-4">
-                    <button
-                      className="mint mint1"
-                      disabled={isSoldOut || isUserMinting || !isActive}
-                      onClick={onMint}
-                    >
-                      <span>{isUserMinting ? 'LOADING...' : 'MINT 1'}</span>
-                    </button>
-
-                    <button
-                      className="mint mint5"
-                      disabled={isSoldOut || isUserMinting || !isActive}
-                      onClick={() => onMintMultiple(5)}
-                    >
-                      <span>{isUserMinting ? 'LOADING...' : 'MINT 5'}</span>
-                    </button>
-
-                    <button
-                      className="mint mint10"
-                      disabled={isSoldOut || isUserMinting || !isActive}
-                      onClick={() => onMintMultiple(10)}
-                    >
-                      <span>{isUserMinting ? 'LOADING...' : 'MINT 10'}</span>
-                    </button>
-
-                    <div className="h-2"></div>
-
-                    <button
-                      className="mint mint-lucky"
-                      disabled={isSoldOut || isUserMinting || !isActive}
-                      onClick={ () => {
-                        const lucky = Math.min(10 + Math.floor(Math.random() * 41), (candyMachine?.state.itemsRemaining ?? 0));
-                        console.log("Lucky number is", lucky);
-                        onMintMultiple(lucky)}
-                      }
-                    >
-                      <span>{isUserMinting ? 'LOADING...' : 'I’M FEELING LUCKY'}</span>
-                    </button>
-
-                    <p className="text-center text-xs">
-                      Desperate to collect a Legend?<br/>Try your luck — this button will mint a random amount between 10 and 50 NFTs
-                    </p>
-                  </div>
-                )
+                  )
+                }
+              </>
               }
             </>
           }
@@ -216,14 +231,6 @@ const Home = (props: HomeProps) => {
     </Snackbar>
 
     </main>
-  );
-};
-
-const renderCounter = ({ days, hours, minutes, seconds }: any) => {
-  return (
-    <span className="text-gray-800 font-bold text-2xl cursor-default">
-      Live in {days} days, {hours} hours, {minutes} minutes, {seconds} seconds
-    </span>
   );
 };
 

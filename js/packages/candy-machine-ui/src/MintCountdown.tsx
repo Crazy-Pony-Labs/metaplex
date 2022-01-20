@@ -10,17 +10,17 @@ const useStyles = makeStyles((theme: Theme) =>
       '& > *': {
         margin: theme.spacing(0.5),
         marginRight: 0,
-        width: theme.spacing(6),
-        height: theme.spacing(6),
+        width: theme.spacing(8),
+        height: theme.spacing(8),
         display: 'flex',
         flexDirection: 'column',
         alignContent: 'center',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#384457',
-        color: 'white',
+        background: '#ffffff',
+        color: 'black',
         borderRadius: 5,
-        fontSize: 10,
+        fontSize: 16,
       },
     },
     done: {
@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     item: {
       fontWeight: 'bold',
-      fontSize: 18,
+      fontSize: 24,
     },
   }),
 );

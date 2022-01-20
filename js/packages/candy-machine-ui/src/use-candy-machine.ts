@@ -7,10 +7,9 @@ import {
   CandyMachineAccount,
   getCandyMachineState,
   mintOneToken,
-  mintMultipleToken
+  mintMultipleToken,
 } from './candy-machine';
 import { AlertState } from './utils';
-import { toDate } from './utils';
 
 export interface UseCandyMachineProps {
   candyMachineId?: anchor.web3.PublicKey;
@@ -21,7 +20,6 @@ export interface UseCandyMachineProps {
 }
 
 export default function useCandyMachine(props: UseCandyMachineProps) {
-  const [mintStartDate, setMintStartDate] = useState<Date | undefined>(undefined);
   const [isUserMinting, setIsUserMinting] = useState(false);
   const [isSoldOut, setIsSoldOut] = useState(false);
   const [candyMachine, setCandyMachine] = useState<CandyMachineAccount>();
@@ -64,19 +62,17 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
         );
         setCandyMachine(cndy);
         setIsSoldOut(candyMachine?.state.itemsAvailable === 0);
-        setMintStartDate(toDate(
-          candyMachine?.state.goLiveDate
-          ? candyMachine?.state.goLiveDate
-          : candyMachine?.state.isPresale
-          ? new anchor.BN(new Date().getTime() / 1000)
-          : undefined,
-        ));
       } catch (e) {
         console.log('There was a problem fetching Candy Machine state');
         console.log(e);
       }
     }
-  }, [anchorWallet, props.candyMachineId, props.connection, candyMachine?.state.goLiveDate, candyMachine?.state.isPresale, candyMachine?.state.itemsAvailable]);
+  }, [
+    anchorWallet,
+    props.candyMachineId,
+    props.connection,
+    candyMachine?.state.itemsAvailable,
+  ]);
 
   const onMint = async () => {
     try {
@@ -145,30 +141,35 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
       setIsUserMinting(true);
       document.getElementById('#identity')?.click();
       if (wallet.connected && candyMachine?.program && wallet.publicKey) {
-        const signedTransactions: any = await mintMultipleToken(candyMachine, wallet.publicKey, quantity);
+        const signedTransactions: any = await mintMultipleToken(
+          candyMachine,
+          wallet.publicKey,
+          quantity,
+        );
         const promiseArray = [];
-        
 
         for (let index = 0; index < signedTransactions.length; index++) {
           const tx = signedTransactions[index];
-          promiseArray.push(awaitTransactionSignatureConfirmation(
-            tx,
-            props.txTimeout,
-            props.connection,
-            true
-          ))
+          promiseArray.push(
+            awaitTransactionSignatureConfirmation(
+              tx,
+              props.txTimeout,
+              props.connection,
+              true,
+            ),
+          );
         }
 
-        const allTransactionsResult = await Promise.all(promiseArray)
+        const allTransactionsResult = await Promise.all(promiseArray);
         let totalSuccess = 0;
         let totalFailure = 0;
 
         for (let index = 0; index < allTransactionsResult.length; index++) {
           const transactionStatus = allTransactionsResult[index];
           if (!transactionStatus?.err) {
-            totalSuccess += 1
+            totalSuccess += 1;
           } else {
-            totalFailure += 1
+            totalFailure += 1;
           }
         }
 
@@ -188,12 +189,10 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
           });
         }
       }
-    } 
-    catch (error: any) {
+    } catch (error: any) {
       let message = error.msg || 'Minting failed! Please try again!';
       if (!error.msg) {
-        if (!error.message) {
-          message = 'Transaction Timeout! Please try again.';
+        if (error.message.indexOf('0x138')) {
         } else if (error.message.indexOf('0x137')) {
           message = `SOLD OUT!`;
         } else if (error.message.indexOf('0x135')) {
@@ -202,7 +201,7 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
       } else {
         if (error.code === 311) {
           message = `SOLD OUT!`;
-          window.location.reload();
+          setIsSoldOut(true);
         } else if (error.code === 312) {
           message = `Minting period hasn't started yet.`;
         }
@@ -213,8 +212,7 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
         message,
         severity: 'error',
       });
-    } 
-    finally {
+    } finally {
       setIsUserMinting(false);
     }
   };
@@ -228,5 +226,13 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
     refreshCandyMachineState,
   ]);
 
-  return { isUserMinting, isSoldOut, mintStartDate, alertState, setAlertState, candyMachine, onMint, onMintMultiple };
+  return {
+    isUserMinting,
+    isSoldOut,
+    alertState,
+    setAlertState,
+    candyMachine,
+    onMint,
+    onMintMultiple,
+  };
 }
