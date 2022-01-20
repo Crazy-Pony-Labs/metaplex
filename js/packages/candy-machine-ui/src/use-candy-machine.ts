@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import * as anchor from '@project-serum/anchor';
 
-import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
   awaitTransactionSignatureConfirmation,
   CandyMachineAccount,
-  CANDY_MACHINE_PROGRAM,
   getCandyMachineState,
   mintOneToken,
   mintMultipleToken
@@ -65,7 +63,7 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
           props.connection,
         );
         setCandyMachine(cndy);
-        setIsSoldOut(candyMachine?.state.itemsAvailable == 0);
+        setIsSoldOut(candyMachine?.state.itemsAvailable === 0);
         setMintStartDate(toDate(
           candyMachine?.state.goLiveDate
           ? candyMachine?.state.goLiveDate
@@ -78,7 +76,7 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
         console.log(e);
       }
     }
-  }, [anchorWallet, props.candyMachineId, props.connection]);
+  }, [anchorWallet, props.candyMachineId, props.connection, candyMachine?.state.goLiveDate, candyMachine?.state.isPresale, candyMachine?.state.itemsAvailable]);
 
   const onMint = async () => {
     try {
@@ -147,7 +145,7 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
       setIsUserMinting(true);
       document.getElementById('#identity')?.click();
       if (wallet.connected && candyMachine?.program && wallet.publicKey) {
-        const signedTransactions: any = await mintMultipleToken(candyMachine, wallet.publicKey);
+        const signedTransactions: any = await mintMultipleToken(candyMachine, wallet.publicKey, quantity);
         const promiseArray = [];
         
 

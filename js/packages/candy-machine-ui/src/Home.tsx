@@ -1,17 +1,14 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useState } from 'react';
 import * as anchor from '@project-serum/anchor';
 
 import styled from 'styled-components';
-import { Container, Snackbar } from '@material-ui/core';
-import Paper from '@material-ui/core/Paper';
+import { Snackbar } from '@material-ui/core';
 import Alert from '@material-ui/lab/Alert';
 import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletDialogButton } from '@solana/wallet-adapter-material-ui';
 import { CANDY_MACHINE_PROGRAM } from './candy-machine';
 import useCandyMachine from './use-candy-machine';
-import { ButtonHeader } from './ButtonHeader';
-import { MintButton } from './MintButton';
 import { GatewayProvider } from '@civic/solana-gateway-react';
 import Countdown from 'react-countdown';
 
@@ -28,8 +25,6 @@ const ConnectButton = styled(WalletDialogButton)`
   font-size: 16px;
   font-weight: bold;
 `;
-
-const MintContainer = styled.div``; // add your owns styles here
 
 export interface HomeProps {
   candyMachineId?: anchor.web3.PublicKey;
