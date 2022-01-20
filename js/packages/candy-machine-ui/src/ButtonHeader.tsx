@@ -10,7 +10,7 @@ type HeaderProps = {
   candyMachine?: CandyMachineAccount;
 };
 
-export const Header = ({ candyMachine }: HeaderProps) => {
+export const ButtonHeader = ({ candyMachine }: HeaderProps) => {
   return (
     <Grid container direction="row" justifyContent="center" wrap="nowrap">
       <Grid container direction="row" wrap="nowrap">

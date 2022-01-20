@@ -1,14 +1,199 @@
-body {
-  background: #000000;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Campton";
+  font-weight: 400;
+  src: url(./assets/campton-book.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Campton";
+  font-weight: 500;
+  src: url(./assets/campton-medium.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Campton";
+  font-weight: 700;
+  src: url(./assets/campton-bold.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Campton";
+  font-weight: 700;
+  src: url(./assets/campton-bold.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Campton";
+  font-weight: 800;
+  src: url(./assets/campton-extrabold.woff2) format("woff2");
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#__next {
+  background-color: #fde8cd;
+  height: 100%;
+  width : 100%;
+}
+
+#icon-eye {
+  width: 250px;
+  margin: auto;
+  padding: 20px;
+  overflow: auto;
+  color: white;
+}
+
+#menu a {
+  @apply inline-flex items-center;
+}
+
+.social {
+  @apply text-gray-800 w-8 h-8;
+}
+
+.discord {
+  @apply hover:text-indigo-500;
+}
+
+.twitter {
+  @apply hover:text-blue-500;
+}
+
+h1 {
+  @apply font-extrabold text-left text-3xl sm:text-6xl md:text-5xl lg:text-6xl xl:text-6xl 2xl:text-7xl uppercase text-black; 
+}
+
+h2 {
+  @apply text-left text-black
+    font-bold sm:font-extrabold
+    text-lg sm:text-2xl md:text-2xl lg:text-3xll;
+}
+
+button>span {
+  @apply z-10 text-black relative;
+}
+
+button.mint {
+  @apply p-4 rounded-lg font-bold text-black
+    text-xl sm:text-2xl
+    min-w-[14rem] sm:min-w-[17rem]
+    shadow hover:shadow-lg;
+  background-size: 200% auto;
+  transition: 0.5s;
+}
+
+button.mint:hover {
+  @apply bg-right;
+}
+
+button.mint1 {
+  background-image: linear-gradient(to right, #84fab0 0%, #8fd3f4 51%, #84fab0 100%);
+}
+
+button.mint5 {
+  background-image: linear-gradient(to right, rgb(56, 189, 248), rgb(251, 113, 133), rgb(163, 230, 53));
+}
+
+button.mint10 {
+  background-image: linear-gradient(to right, rgb(251, 113, 133), rgb(217, 70, 239), rgb(99, 102, 241));
+}
+
+button.mint-lucky {
+  animation: Gradient 4s ease infinite;
+  background-size: 400% 100%;
+  background-image: linear-gradient(-90deg, #EE7752, #E73C7E, #23A6D5, #23D5AB, #EE7752);
+}
+
+button.mint-lucky>span {
+  mix-blend-mode: overlay;
+}
+
+button.mint-lucky::after {
+  content: '';
+  position: absolute;
+  background-size: inherit;
+  background-image: inherit;
+  animation: inherit;
+  left: 0px;
+  right: 0px;
+  top: 2px;
+  height: 100%;
+  filter: blur(1rem);
+}
+
+button.mint-lucky:hover {
+  animation: Pulse 2s ease infinite;
+}
+
+@keyframes Gradient {
+  0% {
+    transform: rotate(2deg);
+  }
+  50% {
+    background-position: 140% 50%;
+    transform: rotate(-2deg);
+  }
+  100% {
+    transform: rotate(2deg); 
+  }
+}
+
+@keyframes Pulse {
+  0% {
+    transform: scale(1.0);
+  }
+  50% {
+    background-position: 140% 50%;
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+}
+
+.spawning {
+  @apply container w-[65%] lg:w-[60%] xl:w-[60%] 2xl:w-[60%];
+}
+
+.spawning .row {
+  @apply hidden md:flex md:flex-row w-full;
+}
+
+.spawning .column {
+  @apply text-center w-full flex flex-col;
+}
+
+.spawning .intercolumn {
+  @apply flex flex-row items-center justify-center text-center font-extrabold leading-none md:leading-normal
+    mx-2 xl:mx-4;
+}
+
+.spawning .plus {
+  @apply text-gray-900 fill-current w-8 h-8 md:w-5 md:h-4 lg:w-6 lg:h-6 xl:w-8 xl:h-8 2xl:w-12 2xl:h-12;
+}
+
+.spawning .equals {
+  @apply text-gray-900 fill-current w-6 h-6 md:w-4 md:h-4 lg:w-6 lg:h-6 xl:w-8 xl:h-8 2xl:w-10 2xl:h-10 mx-1.5 
+    pt-0.5 lg:pt-1.5;
+}
+
+.spawning .object {
+  @apply object-cover rounded-[25%];
+}
+
+.spawning .caption {
+  @apply text-black text-center font-bold mt-1 md:mt-0 text-sm lg:text-lg xl:text-xl;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

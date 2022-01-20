@@ -8,17 +8,15 @@ import Alert from '@material-ui/lab/Alert';
 import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletDialogButton } from '@solana/wallet-adapter-material-ui';
-import {
-  awaitTransactionSignatureConfirmation,
-  CandyMachineAccount,
-  CANDY_MACHINE_PROGRAM,
-  getCandyMachineState,
-  mintOneToken,
-} from './candy-machine';
-import { AlertState } from './utils';
-import { Header } from './Header';
+import { CANDY_MACHINE_PROGRAM } from './candy-machine';
+import useCandyMachine from './use-candy-machine';
+import { ButtonHeader } from './ButtonHeader';
 import { MintButton } from './MintButton';
 import { GatewayProvider } from '@civic/solana-gateway-react';
+import Countdown from 'react-countdown';
+
+import Header from './components/header';
+import Spawning from './components/spawning';
 
 const ConnectButton = styled(WalletDialogButton)`
   width: 100%;
@@ -42,138 +40,60 @@ export interface HomeProps {
 }
 
 const Home = (props: HomeProps) => {
-  const [isUserMinting, setIsUserMinting] = useState(false);
-  const [candyMachine, setCandyMachine] = useState<CandyMachineAccount>();
-  const [alertState, setAlertState] = useState<AlertState>({
-    open: false,
-    message: '',
-    severity: undefined,
-  });
-
-  const rpcUrl = props.rpcHost;
+  const { isUserMinting, isSoldOut, mintStartDate, alertState, setAlertState, candyMachine, onMint, onMintMultiple } = useCandyMachine(props);
+  const [isActive, setIsActive] = useState(false);
   const wallet = useWallet();
-
-  const anchorWallet = useMemo(() => {
-    if (
-      !wallet ||
-      !wallet.publicKey ||
-      !wallet.signAllTransactions ||
-      !wallet.signTransaction
-    ) {
-      return;
-    }
-
-    return {
-      publicKey: wallet.publicKey,
-      signAllTransactions: wallet.signAllTransactions,
-      signTransaction: wallet.signTransaction,
-    } as anchor.Wallet;
-  }, [wallet]);
-
-  const refreshCandyMachineState = useCallback(async () => {
-    if (!anchorWallet) {
-      return;
-    }
-
-    if (props.candyMachineId) {
-      try {
-        const cndy = await getCandyMachineState(
-          anchorWallet,
-          props.candyMachineId,
-          props.connection,
-        );
-        setCandyMachine(cndy);
-      } catch (e) {
-        console.log('There was a problem fetching Candy Machine state');
-        console.log(e);
-      }
-    }
-  }, [anchorWallet, props.candyMachineId, props.connection]);
-
-  const onMint = async () => {
-    try {
-      setIsUserMinting(true);
-      document.getElementById('#identity')?.click();
-      if (wallet.connected && candyMachine?.program && wallet.publicKey) {
-        const mintTxId = (
-          await mintOneToken(candyMachine, wallet.publicKey)
-        )[0];
-
-        let status: any = { err: true };
-        if (mintTxId) {
-          status = await awaitTransactionSignatureConfirmation(
-            mintTxId,
-            props.txTimeout,
-            props.connection,
-            true,
-          );
-        }
-
-        if (status && !status.err) {
-          setAlertState({
-            open: true,
-            message: 'Congratulations! Mint succeeded!',
-            severity: 'success',
-          });
-        } else {
-          setAlertState({
-            open: true,
-            message: 'Mint failed! Please try again!',
-            severity: 'error',
-          });
-        }
-      }
-    } catch (error: any) {
-      let message = error.msg || 'Minting failed! Please try again!';
-      if (!error.msg) {
-        if (!error.message) {
-          message = 'Transaction Timeout! Please try again.';
-        } else if (error.message.indexOf('0x137')) {
-          message = `SOLD OUT!`;
-        } else if (error.message.indexOf('0x135')) {
-          message = `Insufficient funds to mint. Please fund your wallet.`;
-        }
-      } else {
-        if (error.code === 311) {
-          message = `SOLD OUT!`;
-          window.location.reload();
-        } else if (error.code === 312) {
-          message = `Minting period hasn't started yet.`;
-        }
-      }
-
-      setAlertState({
-        open: true,
-        message,
-        severity: 'error',
-      });
-    } finally {
-      setIsUserMinting(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshCandyMachineState();
-  }, [
-    anchorWallet,
-    props.candyMachineId,
-    props.connection,
-    refreshCandyMachineState,
-  ]);
+  const rpcUrl = props.rpcHost;
 
   return (
-    <Container style={{ marginTop: 100 }}>
-      <Container maxWidth="xs" style={{ position: 'relative' }}>
-        <Paper
-          style={{ padding: 24, backgroundColor: '#151A1F', borderRadius: 6 }}
-        >
-          {!wallet.connected ? (
+      <main className="pb-16">
+
+      <Header/>
+
+      <div className="flex flex-col justify-center items-center flex-1 space-y-6 sm:space-y-10 mt-10 sm:mt-20">
+
+        <Spawning/>
+
+        <div className="flex flex-col items-center justify-center sm:space-y-2">
+          <h1>SOLPACAS</h1>
+        </div>
+
+        {!wallet.connected &&
+          <span className="text-gray-800 font-bold text-2xl cursor-default">
             <ConnectButton>Connect Wallet</ConnectButton>
-          ) : (
+          </span>
+        }
+
+        {candyMachine &&
+          <>
+            <div className="grid grid-cols-2 gap-6 text-center text-xl cursor-default">
+              <div>
+                <div><p className="font-medium text-xl text-gray-800">Minted</p></div>
+                <div><p className="font-bold text-4xl">{`${candyMachine?.state.itemsRedeemed}`}</p></div>
+              </div>
+              <div>
+                <div><p className="font-medium text-xl text-gray-800">Available</p></div>
+                <div><p className="font-bold text-4xl">{`${candyMachine?.state.itemsRemaining}`}</p></div>
+              </div>
+            </div>
+          </>
+        }
+
+        <div className="flex flex-col justify-center items-center space-y-4">
+          {wallet.connected &&
             <>
-              <Header candyMachine={candyMachine} />
-              <MintContainer>
-                {candyMachine?.state.isActive &&
+              {isSoldOut && <p className="text-center text-5xl font-bold text-red-600">SOLD OUT</p>}
+              {!isActive &&
+                <Countdown
+                  date={mintStartDate}
+                  onMount={({ completed }) => { console.log("Mint start", mintStartDate, completed); return completed && setIsActive(completed); }}
+                  onComplete={() => setIsActive(true)}
+                  renderer={renderCounter}
+                />
+              }
+
+              {!isSoldOut && 
+                candyMachine?.state.isActive && 
                 candyMachine?.state.gatekeeper &&
                 wallet.publicKey &&
                 wallet.signTransaction ? (
@@ -191,38 +111,124 @@ const Home = (props: HomeProps) => {
                     clusterUrl={rpcUrl}
                     options={{ autoShowModal: false }}
                   >
-                    <MintButton
-                      candyMachine={candyMachine}
-                      isMinting={isUserMinting}
-                      onMint={onMint}
-                    />
+                    <div className="flex flex-col justify-center items-center space-y-4">
+                      <button
+                        className="mint mint1"
+                        disabled={isSoldOut || isUserMinting || !isActive}
+                        onClick={onMint}
+                      >
+                        <span>{isUserMinting ? 'LOADING...' : 'MINT 1'}</span>
+                      </button>
+
+                      <button
+                        className="mint mint5"
+                        disabled={isSoldOut || isUserMinting || !isActive}
+                        onClick={() => onMintMultiple(5)}
+                      >
+                        <span>{isUserMinting ? 'LOADING...' : 'MINT 5'}</span>
+                      </button>
+
+                      <button
+                        className="mint mint10"
+                        disabled={isSoldOut || isUserMinting || !isActive}
+                        onClick={() => onMintMultiple(10)}
+                      >
+                        <span>{isUserMinting ? 'LOADING...' : 'MINT 10'}</span>
+                      </button>
+
+                      <div className="h-2"></div>
+
+                      <button
+                        className="mint mint-lucky"
+                        disabled={isSoldOut || isUserMinting || !isActive}
+                        onClick={ () => {
+                          const lucky = Math.min(10 + Math.floor(Math.random() * 41), (candyMachine?.state.itemsRemaining ?? 0));
+                          console.log("Lucky number is", lucky);
+                          onMintMultiple(lucky)}
+                        }
+                      >
+                        <span>{isUserMinting ? 'LOADING...' : 'I’M FEELING LUCKY'}</span>
+                      </button>
+
+                      <p className="text-center text-xs">
+                        Desperate to collect a Legend?<br/>Try your luck — this button will mint a random amount between 10 and 50 NFTs
+                      </p>
+                    </div>
                   </GatewayProvider>
                 ) : (
-                  <MintButton
-                    candyMachine={candyMachine}
-                    isMinting={isUserMinting}
-                    onMint={onMint}
-                  />
-                )}
-              </MintContainer>
-            </>
-          )}
-        </Paper>
-      </Container>
+                  <div className="flex flex-col justify-center items-center space-y-4">
+                    <button
+                      className="mint mint1"
+                      disabled={isSoldOut || isUserMinting || !isActive}
+                      onClick={onMint}
+                    >
+                      <span>{isUserMinting ? 'LOADING...' : 'MINT 1'}</span>
+                    </button>
 
-      <Snackbar
-        open={alertState.open}
-        autoHideDuration={6000}
+                    <button
+                      className="mint mint5"
+                      disabled={isSoldOut || isUserMinting || !isActive}
+                      onClick={() => onMintMultiple(5)}
+                    >
+                      <span>{isUserMinting ? 'LOADING...' : 'MINT 5'}</span>
+                    </button>
+
+                    <button
+                      className="mint mint10"
+                      disabled={isSoldOut || isUserMinting || !isActive}
+                      onClick={() => onMintMultiple(10)}
+                    >
+                      <span>{isUserMinting ? 'LOADING...' : 'MINT 10'}</span>
+                    </button>
+
+                    <div className="h-2"></div>
+
+                    <button
+                      className="mint mint-lucky"
+                      disabled={isSoldOut || isUserMinting || !isActive}
+                      onClick={ () => {
+                        const lucky = Math.min(10 + Math.floor(Math.random() * 41), (candyMachine?.state.itemsRemaining ?? 0));
+                        console.log("Lucky number is", lucky);
+                        onMintMultiple(lucky)}
+                      }
+                    >
+                      <span>{isUserMinting ? 'LOADING...' : 'I’M FEELING LUCKY'}</span>
+                    </button>
+
+                    <p className="text-center text-xs">
+                      Desperate to collect a Legend?<br/>Try your luck — this button will mint a random amount between 10 and 50 NFTs
+                    </p>
+                  </div>
+                )
+              }
+            </>
+          }
+        </div>
+
+      </div>
+    
+    <Snackbar
+      open={alertState.open}
+      autoHideDuration={6000}
+      onClose={() => setAlertState({ ...alertState, open: false })}
+    >
+      <Alert
         onClose={() => setAlertState({ ...alertState, open: false })}
+        severity={alertState.severity}
       >
-        <Alert
-          onClose={() => setAlertState({ ...alertState, open: false })}
-          severity={alertState.severity}
-        >
-          {alertState.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+        {alertState.message}
+      </Alert>
+    </Snackbar>
+
+    </main>
+  );
+};
+
+const renderCounter = ({ days, hours, minutes, seconds }: any) => {
+  return (
+    <span className="text-gray-800 font-bold text-2xl cursor-default">
+      Live in {days} days, {hours} hours, {minutes} minutes, {seconds} seconds
+    </span>
   );
 };
 
