@@ -20,8 +20,9 @@ export interface UseCandyMachineProps {
 }
 
 export default function useCandyMachine(props: UseCandyMachineProps) {
-  const [isUserMinting, setIsUserMinting] = useState(false);
+  const [isActive, setIsActive] = useState(false);
   const [isSoldOut, setIsSoldOut] = useState(false);
+  const [isUserMinting, setIsUserMinting] = useState(false);
   const [candyMachine, setCandyMachine] = useState<CandyMachineAccount>();
   const [alertState, setAlertState] = useState<AlertState>({
     open: false,
@@ -61,18 +62,12 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
           props.connection,
         );
         setCandyMachine(cndy);
-        setIsSoldOut(candyMachine?.state.itemsAvailable === 0);
       } catch (e) {
         console.log('There was a problem fetching Candy Machine state');
         console.log(e);
       }
     }
-  }, [
-    anchorWallet,
-    props.candyMachineId,
-    props.connection,
-    candyMachine?.state.itemsAvailable,
-  ]);
+  }, [anchorWallet, props.candyMachineId, props.connection]);
 
   const onMint = async () => {
     try {
@@ -201,7 +196,6 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
       } else {
         if (error.code === 311) {
           message = `SOLD OUT!`;
-          setIsSoldOut(true);
         } else if (error.code === 312) {
           message = `Minting period hasn't started yet.`;
         }
@@ -219,16 +213,21 @@ export default function useCandyMachine(props: UseCandyMachineProps) {
 
   useEffect(() => {
     refreshCandyMachineState();
+    setIsActive(candyMachine?.state.isActive ?? false);
+    setIsSoldOut(candyMachine?.state.itemsAvailable === 0);
   }, [
     anchorWallet,
     props.candyMachineId,
     props.connection,
     refreshCandyMachineState,
+    candyMachine?.state.isActive,
+    candyMachine?.state.itemsAvailable,
   ]);
 
   return {
-    isUserMinting,
+    isActive,
     isSoldOut,
+    isUserMinting,
     alertState,
     setAlertState,
     candyMachine,

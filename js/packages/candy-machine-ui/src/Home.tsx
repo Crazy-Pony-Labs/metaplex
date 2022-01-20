@@ -35,7 +35,7 @@ export interface HomeProps {
 }
 
 const Home = (props: HomeProps) => {
-  const { isUserMinting, isSoldOut, alertState, setAlertState, candyMachine, onMint, onMintMultiple } = useCandyMachine(props);
+  const { isActive, isSoldOut, isUserMinting, alertState, setAlertState, candyMachine, onMint, onMintMultiple } = useCandyMachine(props);
   const wallet = useWallet();
   const rpcUrl = props.rpcHost;
 
@@ -73,35 +73,25 @@ const Home = (props: HomeProps) => {
           </>
         }
 
+        {console.log("IS ACTIVE", candyMachine?.state?.isActive)}
+
         <div className="flex flex-col justify-center items-center space-y-4">
           {wallet.connected &&
             <>
               {isSoldOut && <p className="text-center text-5xl font-bold text-red-600">SOLD OUT</p>}
-              {!candyMachine?.state?.isActive &&
-                <>
-                <MintCountdown
-                  date={toDate(
-                    candyMachine?.state.goLiveDate
-                      ? candyMachine?.state.goLiveDate
-                      : candyMachine?.state.isPresale
-                      ? new anchor.BN(new Date().getTime() / 1000)
-                      : undefined,
-                  )}
-                  style={{ justifyContent: 'flex-end' }}
-                  status={
-                    !candyMachine?.state?.isActive || candyMachine?.state?.isSoldOut
-                      ? 'COMPLETED'
-                      : candyMachine?.state.isPresale
-                      ? 'PRESALE'
-                      : 'LIVE'
-                  }
-                />
-                </>
-              }
+              <MintCountdown
+                date={toDate(
+                  candyMachine?.state.goLiveDate
+                    ? candyMachine?.state.goLiveDate
+                    : candyMachine?.state.isPresale
+                    ? new anchor.BN(new Date().getTime() / 1000)
+                    : undefined,
+                )}
+                style={{ justifyContent: 'flex-end' }}
+              />
 
-              {!isSoldOut && 
-                candyMachine?.state.isActive && 
-                candyMachine?.state.gatekeeper &&
+              {
+                !isSoldOut && 
                 wallet.publicKey &&
                 <>
                   {wallet.signTransaction ? (
