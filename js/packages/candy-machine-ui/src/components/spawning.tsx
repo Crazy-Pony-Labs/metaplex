@@ -1,6 +1,4 @@
-import React from 'react';
-
-const Spawning: React.FC = () => {
+const Spawning = () => {
 
 	return <div className="spawning">
 		<div className="row items-center">
