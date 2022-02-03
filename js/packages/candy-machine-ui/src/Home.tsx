@@ -62,11 +62,11 @@ const Home = (props: HomeProps) => {
           <>
             <div className="grid grid-cols-2 gap-6 text-center text-xl cursor-default">
               <div>
-                <div><p className="font-medium text-xl text-gray-800">Minted</p></div>
+                <div><p className="font-medium text-xl text-white">Minted</p></div>
                 <div><p className="font-bold text-4xl">{`${candyMachine?.state.itemsRedeemed}`}</p></div>
               </div>
               <div>
-                <div><p className="font-medium text-xl text-gray-800">Available</p></div>
+                <div><p className="font-medium text-xl text-white">Available</p></div>
                 <div><p className="font-bold text-4xl">{`${candyMachine?.state.itemsRemaining}`}</p></div>
               </div>
             </div>
